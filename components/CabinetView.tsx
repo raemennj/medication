@@ -66,7 +66,7 @@ const AddMedicationWizard: React.FC<{
       setForm(data.form || 'Tablet');
       setInstructions(data.instructions || '');
       setRxNumber(data.rxNumber || '');
-      if (data.quantity) setCurrentInventory(data.quantity);
+      if (typeof data.quantity === 'number') setCurrentInventory(data.quantity);
       if (typeof data.refillsRemaining === 'number') setRefillsRemaining(data.refillsRemaining);
       setStep(2);
     } catch (err) {
@@ -166,6 +166,22 @@ const AddMedicationWizard: React.FC<{
           <div>
             <label className="block text-sm font-bold text-slate-500 mb-1">Form</label>
             <input type="text" value={form} onChange={e => setForm(e.target.value)} className="w-full text-lg p-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700" placeholder="Tablet" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+           <div>
+            <label className="block text-sm font-bold text-slate-500 mb-1">Rx Number</label>
+            <input type="text" value={rxNumber} onChange={e => setRxNumber(e.target.value)} className="w-full p-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700" placeholder="RX-123456" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-slate-500 mb-1">Quantity</label>
+            <input 
+              type="number" 
+              min={0}
+              value={currentInventory.toString()} 
+              onChange={e => setCurrentInventory(Math.max(0, parseInt(e.target.value, 10) || 0))}
+              className="w-full p-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700"
+            />
           </div>
         </div>
         <div className="flex items-center gap-4 bg-fuchsia-50 p-4 rounded-2xl border border-fuchsia-100">

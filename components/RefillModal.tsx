@@ -86,7 +86,7 @@ export const RefillModal: React.FC<RefillModalProps> = ({ medication, onClose, o
               <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Actions</div>
               
               <BigButton 
-                  label="I picked it up" 
+                  label="Refill Now" 
                   subLabel="Add to inventory"
                   icon={<Package />}
                   primary
@@ -94,7 +94,7 @@ export const RefillModal: React.FC<RefillModalProps> = ({ medication, onClose, o
               />
 
               <BigButton 
-                  label="I ordered it" 
+                  label="Order Pickup" 
                   subLabel="Set pickup reminder"
                   icon={<Clock />}
                   onClick={() => setMode('order')}

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TIME_BLOCKS, getIcon } from '../constants';
 import { TimeBlockId } from '../types';
 
@@ -86,6 +86,17 @@ export const Modal: React.FC<{
   title: string;
   children: React.ReactNode;
 }> = ({ isOpen, onClose, title, children }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-indigo-900/40 backdrop-blur-md p-0 sm:p-4">

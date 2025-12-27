@@ -25,8 +25,9 @@ const EditScheduleBlockModal: React.FC<{
   existingTimeBlocks: TimeBlockId[];
   onClose: () => void;
   onSave: (updatedBlock: ScheduleBlock) => void;
+  onDelete: (blockId: string) => void;
   formType: string;
-}> = ({ block, existingTimeBlocks, onClose, onSave, formType }) => {
+}> = ({ block, existingTimeBlocks, onClose, onSave, onDelete, formType }) => {
   const [selectedTime, setSelectedTime] = useState<TimeBlockId>(block.timeBlock);
   const [dose, setDose] = useState<string>(block.dose.toString());
   const [notifEnabled, setNotifEnabled] = useState(block.notificationEnabled || false);
@@ -119,6 +120,17 @@ const EditScheduleBlockModal: React.FC<{
           </div>
 
           <BigButton label="Update Schedule" primary onClick={handleSave} icon={<CheckCircle2 />} />
+          <BigButton
+            label="Delete Dose"
+            danger
+            icon={<Trash2 />}
+            onClick={() => {
+              if (confirm("Delete this scheduled dose?")) {
+                onDelete(block.id);
+                onClose();
+              }
+            }}
+          />
       </div>
   )
 };
@@ -179,6 +191,10 @@ const EditMedicationModal: React.FC<{
       <div>
         <label className="block text-sm font-bold text-slate-500 mb-1">Instructions</label>
         <textarea name="instructions" value={formData.instructions} onChange={handleChange} className="w-full p-3 rounded-xl border-2 border-slate-200" rows={2} />
+      </div>
+      <div>
+        <label className="block text-sm font-bold text-slate-500 mb-1">Notes</label>
+        <textarea name="notes" value={formData.notes} onChange={handleChange} className="w-full p-3 rounded-xl border-2 border-slate-200" rows={3} />
       </div>
       <div>
             <label className="block text-sm font-bold text-slate-500 mb-2">Color Tag</label>
@@ -279,6 +295,16 @@ export const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, 
   const isLow = !hasNoRefills && medication.currentInventory <= medication.refillThreshold;
   
   const availableBlocks = Object.values(TIME_BLOCKS).filter(b => !medication.schedule.some(s => s.timeBlock === b.id)).sort((a,b) => a.sortOrder - b.sortOrder);
+  const recentLogs = useMemo(() => {
+    return logs
+      .filter(log => log.medicationId === medication.id && log.taken)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 5)
+      .map(log => {
+        const dose = medication.schedule.find(block => block.timeBlock === log.timeBlock)?.dose ?? 1;
+        return { ...log, dose };
+      });
+  }, [logs, medication.id, medication.schedule]);
 
   return (
     <div className="pb-24 relative">
@@ -339,6 +365,13 @@ export const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, 
            <div><div className="text-xs font-bold uppercase tracking-wide opacity-60 mb-1">Instructions</div><p className="font-medium text-lg leading-snug">"{medication.instructions}"</p></div>
          </div>
       )}
+      
+      {medication.notes && (
+         <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl text-slate-700 mb-6">
+           <div className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Notes</div>
+           <p className="font-medium text-base leading-snug">{medication.notes}</p>
+         </div>
+      )}
 
       {isFinalDoses && (
         <div className="bg-gradient-to-r from-orange-100 to-pink-100 border border-orange-200 p-5 rounded-3xl mb-6 shadow-sm flex items-center gap-4">
@@ -379,7 +412,7 @@ export const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, 
                </div>
              );
            })}
-           {editingSchedule && (<button onClick={() => setIsAddingTime(true)} className="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 font-bold flex items-center justify-center gap-2 hover:bg-slate-50"><Plus size={20} /> Add Time</button>)}
+           {editingSchedule && (<button onClick={() => setIsAddingTime(true)} className="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 font-bold flex items-center justify-center gap-2 hover:bg-slate-50"><Plus size={20} /> Add Dose</button>)}
          </div>
       </div>
 
@@ -407,6 +440,27 @@ export const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, 
         </div>
       </div>
 
+      <div className="mb-10">
+        <h3 className="text-lg font-bold text-slate-700 mb-3 px-1">Recent Activity</h3>
+        <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+          {recentLogs.length === 0 ? (
+            <div className="text-center text-slate-400 font-medium py-4">No logs yet.</div>
+          ) : (
+            recentLogs.map(log => (
+              <div key={log.id} className="flex items-center justify-between border-b border-slate-100 last:border-b-0 pb-3 last:pb-0">
+                <div>
+                  <div className="font-bold text-slate-800">{TIME_BLOCKS[log.timeBlock]?.label || log.timeBlock}</div>
+                  <div className="text-xs text-slate-400 font-medium">{format(new Date(log.timestamp), 'MMM d, h:mm a')}</div>
+                </div>
+                <div className="text-sm font-bold text-slate-600">
+                  {log.dose} {medication.form}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       <div className="mt-12 space-y-4">
            {isStopped ? (
              <><button onClick={() => onRestore && onRestore(medication.id)} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors text-lg flex items-center justify-center gap-2"><RotateCcw size={20} />Resume Medication</button><button onClick={() => { if(confirm("This will permanently delete the medication and all its history. This cannot be undone.")) { onPermanentDelete && onPermanentDelete(medication.id); } }} className="w-full bg-slate-100 text-red-400 font-bold py-3 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors text-sm flex items-center justify-center gap-2"><Trash2 size={16} />Delete Permanently</button></>
@@ -414,9 +468,9 @@ export const MedicationDetail: React.FC<MedicationDetailProps> = ({ medication, 
       </div>
 
       <Modal isOpen={isEditingDetails} onClose={() => setIsEditingDetails(false)} title="Edit Details"><EditMedicationModal medication={medication} onClose={() => setIsEditingDetails(false)} onSave={onUpdate}/></Modal>
-      <Modal isOpen={!!editingBlock} onClose={() => setEditingBlock(null)} title="Edit Schedule">{editingBlock && (<EditScheduleBlockModal block={editingBlock} existingTimeBlocks={medication.schedule.map(s => s.timeBlock)} formType={medication.form || 'Pill'} onClose={() => setEditingBlock(null)} onSave={handleUpdateScheduleBlock} />)}</Modal>
+      <Modal isOpen={!!editingBlock} onClose={() => setEditingBlock(null)} title="Edit Schedule">{editingBlock && (<EditScheduleBlockModal block={editingBlock} existingTimeBlocks={medication.schedule.map(s => s.timeBlock)} formType={medication.form || 'Pill'} onClose={() => setEditingBlock(null)} onSave={handleUpdateScheduleBlock} onDelete={handleDeleteScheduleBlock} />)}</Modal>
       <Modal isOpen={isRefilling} onClose={() => setIsRefilling(false)} title={`Refill ${medication.name}`}><RefillModal medication={medication} onClose={() => setIsRefilling(false)} onRefill={onRefill} onOrder={onOrder}/></Modal>
-      <Modal isOpen={isAddingTime} onClose={() => setIsAddingTime(false)} title="Add Time"><div className="space-y-4"><p className="text-slate-500 mb-4">Select a time to add to the schedule:</p><div className="flex flex-wrap gap-2">{availableBlocks.map(block => (<TimeBlockChip key={block.id} blockId={block.id} onClick={() => handleAddScheduleBlock(block.id)}/>))}</div></div></Modal>
+      <Modal isOpen={isAddingTime} onClose={() => setIsAddingTime(false)} title="Add Dose"><div className="space-y-4"><p className="text-slate-500 mb-4">Select a time to add to the schedule:</p><div className="flex flex-wrap gap-2">{availableBlocks.map(block => (<TimeBlockChip key={block.id} blockId={block.id} onClick={() => handleAddScheduleBlock(block.id)}/>))}</div></div></Modal>
     </div>
   );
 };
