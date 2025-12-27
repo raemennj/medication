@@ -3,7 +3,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Track medications, see what's due today, and stay on top of refills with Mom's Meds."
+    />
+    <meta name="application-name" content="Mom's Meds" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="color-scheme" content="light" />
     <title>Mom's Meds</title>
     
     <!-- PWA Meta Tags -->
@@ -17,26 +27,95 @@
     <link rel="icon" type="image/png" href="icon-192.png" />
     <link rel="apple-touch-icon" href="icon-512.png" />
 
+    <!-- Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500&display=swap"
+      rel="stylesheet"
+    />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       /* Safe area spacing for modern phones */
       .pb-safe {
         padding-bottom: env(safe-area-inset-bottom);
       }
+      :root {
+        color-scheme: light;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background-color: #fdf4ff;
+      }
       /* Hide scrollbar for cleaner look */
       ::-webkit-scrollbar {
         width: 0px;
         background: transparent;
       }
+      * {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
       /* Prevent pull-to-refresh for a more app-like feel */
       body {
         overscroll-behavior-y: contain;
+        margin: 0;
+        min-height: 100vh;
+        color: #0f172a;
+        background: radial-gradient(circle at 20% 20%, rgba(244, 114, 182, 0.15), transparent 35%),
+          radial-gradient(circle at 80% 0%, rgba(190, 24, 93, 0.1), transparent 32%),
+          linear-gradient(180deg, #fdf4ff 0%, #f8fafc 60%, #fff 100%);
+        position: relative;
       }
       /* Custom utility for the glass effect */
       .glass {
         background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+      }
+      .aurora {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(800px at 20% 20%, rgba(236, 72, 153, 0.16), transparent 45%),
+          radial-gradient(700px at 80% 10%, rgba(167, 139, 250, 0.16), transparent 42%),
+          radial-gradient(900px at 30% 80%, rgba(248, 113, 113, 0.12), transparent 40%);
+        filter: saturate(1.1);
+        z-index: 0;
+      }
+      .grid-overlay {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image: linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+        background-size: 32px 32px;
+        mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.3), transparent 60%);
+        z-index: 0;
+      }
+      #root {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+      }
+      .no-script {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #0f172a;
+        color: #fff;
+        font-weight: 600;
+        padding: 24px;
+        text-align: center;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
       }
     </style>
   <script type="importmap">
@@ -53,7 +132,12 @@
 }
 </script>
 </head>
-  <body class="bg-fuchsia-50 selection:bg-pink-200">
+  <body class="selection:bg-pink-200">
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="grid-overlay" aria-hidden="true"></div>
     <div id="root"></div>
+    <noscript>
+      <div class="no-script">Please enable JavaScript to use Mom's Meds.</div>
+    </noscript>
   </body>
 </html>
