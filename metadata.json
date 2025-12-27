@@ -1,0 +1,7 @@
+{
+  "name": "Mom's Meds",
+  "description": "A simple, accessible medication tracker with calendar, cabinet, and inventory management.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
